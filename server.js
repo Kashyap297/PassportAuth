@@ -3,6 +3,10 @@ const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const multer = require('multer')
 const mongoose = require('mongoose')
+// passport
+const passport = require('passport')
+const LocalStrategy = require('passport-local').Strategy;
+const session = require('express-session');
 
 const { userModel } = require('./schemas/userschema.js')
 const { blogModel } = require('./schemas/blogschema.js')
@@ -16,9 +20,23 @@ app.use(express.static('upload'));
 app.use(bodyParser.urlencoded({ extended: false }))
 app.set('view engine', 'ejs')
 app.use(bodyParser.json());
-app.use(cookieParser());
+app.use(session({
+    secret: 'secret',
+    resave: false,
+    saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 mongoose.connect('mongodb+srv://kashyap29700:hJMbbrThhO5fcH80@cluster0.6lpuf6e.mongodb.net/')
+
+function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/login');
+}
+
 
 const storage = multer.diskStorage(
     {
@@ -33,54 +51,47 @@ const storage = multer.diskStorage(
 
 var upload = multer({ storage: storage }).single('file');
 
-// authentication
-const authLogin = (req, res, next) => {
-    if (req.cookies.loginUsers) {
-        next()
-    } else {
-        res.redirect('/login')
+passport.use(new LocalStrategy({
+    usernameField: 'email',
+},
+    async function (email, password, done) {
+        try {
+            const user = await userModel.findOne({ email: email });
+            // console.log(user);
+            if (!user) {
+                return done(null, false, { message: 'Incorrect email.' });
+            }
+            if (user.password !== password) {
+                return done(null, false, { message: 'Incorrect password.' });
+            }
+            return done(null, user);
+        } catch (err) {
+            return done(err);
+        }
     }
-}
-const checkLoggedIn = (req, res, next) => {
-    if (req.cookies.loginUsers) {
-        res.redirect('/blogs');
-    } else {
-        res.locals.username = null;
-        next();
-    }
-};
-const checkLogged = (req, res, next) => {
-    if (req.cookies.loginUsers) {
-        next();
-    } else {
-        res.locals.username = null;
-        next();
-    }
-};
+));
 
+passport.serializeUser(function (user, done) {
+    done(null, user.id);
+});
+
+passport.deserializeUser(async (id, cb) => {
+    try {
+        const userData = await userModel.findById(id);
+        cb(null, userData);
+    } catch (err) {
+        cb(err);
+    }
+});
 
 // home
-app.get('/', checkLogged, (req, res) => {
-    const user = req.cookies.loginUsers;
-    res.render('./Pages/index', { username: user ? user.username : null })
-})
-
-// Blog
-app.get('/blogs', authLogin, async (req, res) => {
-
-    try {
-        const blogs = await blogModel.find();
-        const user = req.cookies.loginUsers;
-        res.locals.username = user.username;
-        res.render('./Pages/blog', { blogs: blogs, username: user.username });
-    } catch (err) {
-        console.log(err);
-    }
-
+app.get('/', (req, res) => {
+    const user = req.user;
+    res.render('./Pages/index')
 })
 
 // register
-app.get('/register', checkLoggedIn, (req, res) => {
+app.get('/register', (req, res) => {
     res.render('./Pages/register')
 })
 app.post('/register', async (req, res) => {
@@ -96,60 +107,50 @@ app.post('/register', async (req, res) => {
 })
 
 // login
-app.get('/login', checkLoggedIn, (req, res) => {
+app.get('/login', (req, res) => {
     res.render('./Pages/login')
 })
-app.post('/login', async (req, res) => {
-    let loginUser = req.body;
-    try {
-        const user = await userModel.findOne({ email: loginUser.email });
-        if (user) {
-            if (user.password === loginUser.password) {
-                res.cookie('loginUsers', user, { maxAge: 250000 })
-                console.log('success');
-                // res.redirect('/blogs')
-                res.redirect('/blogs?username=' + encodeURIComponent(user.username));
-
-            } else {
-                console.log('fail');
-                res.redirect('/login')
-            }
-        } else {
-            console.log("User Not FOund");
-            res.redirect('/register')
-        }
-    } catch (err) {
-        console.log(err);
-        res.redirect('/login');
-    }
-})
-
+app.post('/login',
+    passport.authenticate('local', { successRedirect: '/', failureRedirect: '/login' }),
+);
 
 // logout
 app.get('/logout', (req, res) => {
-    if (req.cookies.loginUsers) {
-        res.clearCookie("loginUsers");
-    }
-    res.redirect('/')
-})
+    req.logout(function (err) {
+        if (err) {
+            console.error(err);
+            return res.redirect('/');
+        }
+        res.redirect('/');
+    });
+});
 
+// Blog
+app.get('/blogs', ensureAuthenticated, async (req, res) => {
+    try {
+        const blogs = await blogModel.find();
+        const user = req.user;
+        res.render('./Pages/blog', { blogs: blogs, username: user.username });
+    } catch (err) {
+        console.log(err);
+    }
+
+})
 // create Blog
-app.get('/createblog', authLogin, (req, res) => {
-    const user = req.cookies.loginUsers;
+app.get('/createblog', ensureAuthenticated, (req, res) => {
+    const user = req.user;
     res.render('./Pages/creation', { username: user ? user.username : null })
 })
 // post data
 app.post('/upload', async (req, res) => {
     upload(req, res, async () => {
         if (req.file) {
-            const loggedInUser = req.cookies.loginUsers;
-            console.log(loggedInUser);
+            const user = req.user
             var details = {
                 title: req.body.title,
                 description: req.body.description,
-                // time: req.body.time,
                 blogimage: req.file.filename,
-                username: loggedInUser.username
+                username: user.username
             }
             console.log(details);
 
