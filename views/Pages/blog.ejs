@@ -1,0 +1,63 @@
+    <%- include('../Partials/header') %>
+        <section class='cart-section my-4 py-5 bg-white mx-4 border-rad-parent'>
+            <h1 class='text-center title mb-3'>Blogs</h1>
+            <div class="cart mt-5 mx-5">
+                <div class="row">
+                    <div class="col-8">
+                        <div class="cart-area bg-theme p-3 border-rad-header">
+                            <div class="row">
+                                <% blogs.forEach((blog)=> { %>
+                                    <div class="col-4">
+                                        <div class="blog border-rad-header mb-3 border-bottom pb-3">
+                                            <div class="blog-img border-rad-header">
+                                                <img src="/<%= blog.blogimage %>" alt=""
+                                                    class="border-rad-header img-fluid">
+                                            </div>
+                                            <div class="blog-content mt-3 px-2">
+                                                <h5 class="blog-title text-dark text-capitalize">
+                                                    <%= blog.title %>
+                                                </h5>
+                                                <p class="text-justify text-secondary">
+                                                    <%= blog.description %>
+                                                </p>
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="user d-flex align-items-center">
+                                                        <img src="https://i.pinimg.com/236x/b1/88/c6/b188c6801ad1d71d3c962c6e4aa2d0cf.jpg"
+                                                            alt="" class="avtar-img">
+                                                        <span class="ms-1 fw-bolder text-secondary text-capitalize"><%= blog.username %></span>
+                                                    </div>
+                                                    <div class="date">
+                                                        <span class="text-success">
+                                                            <%= new Date(blog.createdAt).toLocaleString() %>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <% }) %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="cart-billing bg-theme px-5 py-4 border-rad-header">
+                            <h3 class='text-center border-bottom pb-2  m-0 clr-gr title'>My Profile</h3>
+                            <div class="d-flex align-items-center justify-content-evenly">
+                                <div class="profile-img my-3">
+                                    <img src="https://i.pinimg.com/236x/d2/6f/93/d26f9314a8bc7834d676e7a7b51b742e.jpg"
+                                        alt="">
+                                </div>
+                                <div class="username">
+                                    <h4 class="text-center text-secondary"> User Name : <br><span
+                                            class="text-danger text-capitalize">
+                                            <%= username %>
+                                        </span></h4>
+                                </div>
+                            </div>
+                            <a href="/createblog" class="btn btn-outline-danger w-100 fw-bold">Create Blog</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <%- include('../Partials/footer') %>

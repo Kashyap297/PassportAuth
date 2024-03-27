@@ -1,0 +1,52 @@
+<%- include('../Partials/header') %>
+    <div class="login ">
+        <div class="container m-auto">
+            <div class="d-flex align-items-center justify-content-center vh-80">
+                <div class="col-4">
+                    <form action="" method="post" class='shadow-lg bor-rad p-4 bg-light' onsubmit="return validateForm(this)">
+                        <h1 class='text-center text-secondary'>Log-In</h1>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label htmlFor="" class='fw-bold my-2 lightslategrey'>Email-ID : </label>
+                            <span class='text-danger fs-6 fw-bold' id="emailError"></span>
+                        </div>
+                        <input type="email" class='w-100 form-control' placeholder='Enter Email' name='email' />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label htmlFor="" class='fw-bold my-2 lightslategrey'>Password : </label>
+                            <span class='text-danger fs-6 fw-bold' id="passwordError"></span>
+                        </div>
+                        <input type="password" class='w-100 form-control' placeholder='Enter Password'
+                            name='password' />
+                        <div class="text-center mt-3">
+                            <button class='btn btn-dark rounded w-100'>Login</button>
+                        </div>
+                        <p class='text-center mt-3 mb-0'>Don't have an account ?
+                            <a href="/register" class="text-primary fw-bold w-100">Register</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%- include('../Partials/footer') %>
+    <script>
+        const validateForm = (e) => {
+            let isValid = true;
+            const emailError = document.getElementById("emailError");
+            const passwordError = document.getElementById("passwordError");
+
+            if (e.email.value === "") {
+                emailError.innerText = "Required*";
+                isValid = false;
+            } else {
+                emailError.innerText = ""
+            }
+            if (e.password.value === "") {
+                passwordError.innerText = "Required*";
+                isValid = false;
+            } else {
+                passwordError.innerText = ""
+            }
+
+            return isValid
+        }
+    </script>
