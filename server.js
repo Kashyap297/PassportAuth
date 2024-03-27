@@ -87,12 +87,13 @@ passport.deserializeUser(async (id, cb) => {
 // home
 app.get('/', (req, res) => {
     const user = req.user;
-    res.render('./Pages/index')
+    res.render('./Pages/index', { username: user ? user.username : null })
 })
 
 // register
 app.get('/register', (req, res) => {
-    res.render('./Pages/register')
+    const user = req.user;
+    res.render('./Pages/register', { username: user ? user.username : null })
 })
 app.post('/register', async (req, res) => {
     const users = req.body;
@@ -108,7 +109,8 @@ app.post('/register', async (req, res) => {
 
 // login
 app.get('/login', (req, res) => {
-    res.render('./Pages/login')
+    const user = req.user;
+    res.render('./Pages/login', { username: user ? user.username : null })
 })
 app.post('/login',
     passport.authenticate('local', { successRedirect: '/', failureRedirect: '/login' }),
