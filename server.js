@@ -128,11 +128,17 @@ app.get('/logout', (req, res) => {
 });
 
 // Blog
-app.get('/blogs', ensureAuthenticated, async (req, res) => {
+app.get('/blogs', async (req, res) => {
     try {
-        const blogs = await blogModel.find();
         const user = req.user;
-        res.render('./Pages/blog', { blogs: blogs, username: user.username });
+        if (user === undefined) {
+            const blogs = await blogModel.find();
+            res.render('./Pages/blog', { blogs: blogs , username: user ? user.username : null });
+
+        } else {
+            const blogs = await blogModel.find();
+            res.render('./Pages/blog', { blogs: blogs, username: user.username });
+        }
     } catch (err) {
         console.log(err);
     }
